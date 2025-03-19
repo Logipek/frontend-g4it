@@ -117,35 +117,66 @@ export const useEquipmentStore = create<EquipmentState>()(
       consolidateEquipments: () => {
         const { equipments } = get();
 
-        // Créer un Map pour regrouper les équipements par modèle
-        const equipmentMap = new Map<string, ConsolidatedEquipment>();
+        // Vérification que equipments est un tableau valide
+        if (!Array.isArray(equipments) || equipments.length === 0) {
+          set({
+            consolidatedEquipments: [],
+            isConsolidationModified: false
+          });
+          return;
+        }
 
-        equipments.forEach(equipment => {
-          const key = equipment.modele;
+        try {
+          // Créer un Map pour regrouper les équipements par modèle
+          const equipmentMap = new Map<string, ConsolidatedEquipment>();
 
-          if (equipmentMap.has(key)) {
-            // Si le modèle existe déjà, additionner la quantité
-            const existingEquipment = equipmentMap.get(key)!;
-            existingEquipment.quantite += equipment.quantite;
-          } else {
-            // Sinon, créer une nouvelle entrée
-            equipmentMap.set(key, {
-              modele: equipment.modele,
-              type: equipment.modele.includes('Écran') ? 'Écran' :
-                   equipment.modele.includes('Portable') || equipment.modele.includes('MacBook') ? 'Ordinateur Portable' :
-                   equipment.modele.includes('Serveur') || equipment.modele.includes('PowerEdge') ? 'Serveur' : 'Autre',
-              quantite: equipment.quantite
-            });
-          }
-        });
+          equipments.forEach(equipment => {
+            if (!equipment || typeof equipment !== 'object') {
+              return; // Ignorer les entrées invalides
+            }
 
-        // Convertir le Map en tableau
-        const consolidatedEquipments = Array.from(equipmentMap.values());
+            const key = equipment.modele;
+            if (!key) return; // Ignorer si le modèle est undefined
 
-        set({
-          consolidatedEquipments,
-          isConsolidationModified: false
-        });
+            if (equipmentMap.has(key)) {
+              // Si le modèle existe déjà, additionner la quantité
+              const existingEquipment = equipmentMap.get(key)!;
+              existingEquipment.quantite += equipment.quantite || 0;
+            } else {
+              // Déterminer le type d'équipement en fonction du modèle
+              let equipType = 'Autre';
+              if (key.includes('Écran')) {
+                equipType = 'Écran';
+              } else if (key.includes('Portable') || key.includes('MacBook')) {
+                equipType = 'Ordinateur Portable';
+              } else if (key.includes('Serveur') || key.includes('PowerEdge')) {
+                equipType = 'Serveur';
+              }
+
+              // Créer une nouvelle entrée
+              equipmentMap.set(key, {
+                modele: key,
+                type: equipType,
+                quantite: equipment.quantite || 0
+              });
+            }
+          });
+
+          // Convertir le Map en tableau
+          const consolidatedEquipments = Array.from(equipmentMap.values());
+
+          set({
+            consolidatedEquipments,
+            isConsolidationModified: false
+          });
+        } catch (error) {
+          console.error("Erreur lors de la consolidation des équipements:", error);
+          set({
+            error: "Une erreur est survenue lors de la consolidation des équipements.",
+            consolidatedEquipments: [],
+            isConsolidationModified: false
+          });
+        }
       },
       setIsConsolidationModified: (isModified) => set({ isConsolidationModified: isModified }),
     }),

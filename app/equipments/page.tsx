@@ -105,8 +105,11 @@ export default function EquipmentManagement() {
     setIsTypesLoading(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:3000/referentiel/typesEquipement');
-      setEquipmentTypes(response.data);
+      // Utiliser mockData au lieu de faire une requête API
+      mockData();
+      // Commenté pour éviter les erreurs axios
+      // const response = await axios.get('http://localhost:3000/referentiel/typesEquipement');
+      // setEquipmentTypes(response.data);
     } catch (err) {
       console.error("Erreur lors du chargement des types d'équipement:", err);
       setError("Impossible de charger les types d'équipement. Veuillez réessayer.");
@@ -122,8 +125,28 @@ export default function EquipmentManagement() {
     setIsModelsLoading(true);
     setError(null);
     try {
-      // Dans une application réelle, l'URL serait adaptée pour inclure le typeId
-      const response = await axios.get('http://localhost:3000/referentiel/facteursCaracterisation', {
+      // Utiliser des données mockées
+      let models: EquipmentModel[] = [];
+      if (typeId === 1) {
+        models = [
+          { id: 101, nom: "Dell P2720DC", type: "Écran" },
+          { id: 102, nom: "HP Z27", type: "Écran" }
+        ];
+      } else if (typeId === 2) {
+        models = [
+          { id: 201, nom: "MacBook Pro", type: "Ordinateur Portable" },
+          { id: 202, nom: "Dell XPS 13", type: "Ordinateur Portable" }
+        ];
+      } else if (typeId === 3) {
+        models = [
+          { id: 301, nom: "Dell PowerEdge", type: "Serveur" },
+          { id: 302, nom: "HP ProLiant", type: "Serveur" }
+        ];
+      }
+      setEquipmentModels(models);
+
+      // Commenté pour éviter les erreurs axios
+      /* const response = await axios.get('http://localhost:3000/referentiel/facteursCaracterisation', {
         params: {
           critere: 'Climate change',
           etapeacv: 'FABRICATION',
@@ -136,7 +159,7 @@ export default function EquipmentManagement() {
         model.type === selectedType?.nom
       );
 
-      setEquipmentModels(filteredModels);
+      setEquipmentModels(filteredModels); */
     } catch (err) {
       console.error("Erreur lors du chargement des modèles d'équipement:", err);
       setError("Impossible de charger les modèles d'équipement. Veuillez réessayer.");
@@ -152,8 +175,30 @@ export default function EquipmentManagement() {
     setError(null);
 
     try {
-      // Dans une application réelle, cette URL et ces paramètres seraient adaptés
-      const response = await axios.get('http://localhost:3000/equipements', {
+      // Simuler des données d'équipements
+      const mockEquipments: Equipment[] = [];
+      // Générer quelques équipements selon le type et le modèle sélectionnés
+      for (let i = 1; i <= 8; i++) {
+        const prefix = selectedModel ? selectedModel.nom : (selectedType ? selectedType.nom : "Équipement");
+        mockEquipments.push({
+          id: i,
+          nom: `${prefix} ${i}`,
+          modele: selectedModel ? selectedModel.nom : "Modèle standard",
+          quantite: Math.floor(Math.random() * 5) + 1,
+          statut: Math.random() > 0.3 ? "Actif" : "Inactif"
+        });
+      }
+
+      // Paginer les résultats
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedItems = mockEquipments.slice(startIndex, endIndex);
+
+      setEquipments(paginatedItems);
+      setTotalPages(Math.ceil(mockEquipments.length / itemsPerPage));
+
+      // Commenté pour éviter les erreurs axios
+      /* const response = await axios.get('http://localhost:3000/equipements', {
         params: {
           typeId: selectedType?.id,
           modelId: selectedModel?.id,
@@ -164,7 +209,7 @@ export default function EquipmentManagement() {
 
       // Dans un cas réel, l'API renverrait ces informations
       setEquipments(response.data.items || []);
-      setTotalPages(response.data.totalPages || 1);
+      setTotalPages(response.data.totalPages || 1); */
     } catch (err) {
       console.error("Erreur lors du chargement des équipements:", err);
       setError("Impossible de charger la liste des équipements. Veuillez réessayer.");
